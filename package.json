@@ -1,0 +1,12 @@
+{
+  "name": "itinerary-ai",
+  "private": true,
+  "scripts": {
+    "client": "npm run dev --prefix client",
+    "server": "nodemon server/index.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
