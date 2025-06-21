@@ -1,6 +1,8 @@
-import { OPENAI_API_KEY } from "../config.js";
+import { OPENAI_API_KEY, MAPBOX_TOKEN } from "../config.js";
 import express from "express";
 import { OpenAI } from "openai";
+import axios from "axios";
+import { AutofillData } from "./data.js";
 
 console.log("🔍 API KEY inside route:", OPENAI_API_KEY);
 
@@ -58,6 +60,48 @@ Output strictly in this format:
     res.json({ response: response.choices[0].message.content });
   } catch (error) {
     console.error("Error in /search route:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/placeAutofill", async (req, res) => {
+  try {
+    const { text } = req.query;
+    console.log("🔍 placeAutofill", text);
+    if (!text) {
+      return res
+        .status(400)
+        .json({ error: "Text query parameter is required" });
+    }
+
+    let data = await axios.get(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${text}.json`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        params: {
+          access_token: MAPBOX_TOKEN,
+          autocomplete: true,
+          types: "place",
+          limit: 5, // Limit the number of results
+        },
+      }
+    );
+
+    if (data.status === 200) {
+      const places = data.data.features.map((feature) => ({
+        id: feature.id,
+        name: feature.place_name,
+        coordinates: feature.geometry.coordinates,
+      }));
+
+      res.json(places);
+    } else {
+      res.status(data.status).json({ error: "Failed to fetch place data" });
+    }
+  } catch (error) {
+    console.error("Error in /placeAutofill route:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
