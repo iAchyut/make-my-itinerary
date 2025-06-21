@@ -1,15 +1,16 @@
+import { OPENAI_API_KEY } from './config.js';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-
-dotenv.config(); // Load environment variables
+import itineraryRouter from "./routes/itinerary.js"
 
 const app = express();
-
 // Middleware
+console.log('🔍 API KEY inside app:', OPENAI_API_KEY);
+
 app.use(cors());
 app.use(express.json()); // Parse JSON bodies
 
+app.use('/api/itinerary', itineraryRouter);
 // Sample route
 app.get('/', (req, res) => {
   res.send('API is running...');
