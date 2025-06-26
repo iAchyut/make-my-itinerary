@@ -24,7 +24,7 @@ Output strictly in this format:
   "from": "${from}",
   "to": "${to}",
   "nearByplaceToVisit": [poplar places to visit near ${place}],
-  "documentsReq": [["visa if required"], ["local documents if required"], "other documents if required"]],
+  "documentsReq": [ documents required to visit ${place}],
   "bestTimeToVisit": [best time to visit ${place}],
   "bestRouteFromYourLocation": ["Delhi", "Stop1", "Stop2",..... "${place}"]
   "shoppingPlaces": ["popular shopping places in ${place}"],

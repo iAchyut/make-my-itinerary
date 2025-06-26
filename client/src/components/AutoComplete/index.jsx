@@ -1,10 +1,17 @@
 import React, { useState } from "react";
 import { AutoComplete, Spin } from "antd";
-import { GetPlaceAutofill } from "../../apiCalls/api";
+import useAPI from "../../apiCalls/useAPI";
+import ItineraryModal from "../ItineraryModal";
 
 function AsyncAutoComplete() {
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  let { data, loadingData, error, fetchData } = useAPI(
+    `http://localhost:5000/api/itinerary/search`
+  );
+  console.log("Fetched itinerary data:", data, loadingData, error);
 
   const handleSearch = async (value) => {
     if (!value) {
@@ -15,9 +22,9 @@ function AsyncAutoComplete() {
     // Simulate async fetch (replace with actual API call)
     // const { data } = await GetPlaceAutofill(value);
     //console.log("Fetched data:", data);]
-    
+
     const data = await fetchSuggestions(value);
-    
+
     setOptions(data.map((item) => ({ value: item.name })));
     setLoading(false);
   };
@@ -54,15 +61,41 @@ function AsyncAutoComplete() {
     ];
   };
 
+  const handleSelect = (value) => {
+    console.log("Selected:", value);
+    fetchData(
+      {
+        method: "POST",
+        data: {
+          place: value,
+          to: "12/05/2025",
+          from: "18/05/2025",
+        },
+      },
+      (response) => {
+        console.log("Response data:", response);
+        setIsModalOpen(true);
+      }
+    );
+  };
+
   return (
-    <AutoComplete
-      style={{ width: "100%" }}
-      onSearch={handleSearch}
-      notFoundContent={loading ? <Spin size="small" /> : "No Results"}
-      options={options}
-      placeholder="Where to?"
-      size="large"
-    />
+    <>
+      <AutoComplete
+        style={{ width: "100%" }}
+        onSearch={handleSearch}
+        notFoundContent={loading ? <Spin size="small" /> : "No Results"}
+        onSelect={handleSelect}
+        options={options}
+        placeholder="Where to?"
+        size="large"
+      />
+      <ItineraryModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        data={data ? JSON.parse(data.response) : null}
+      />
+    </>
   );
 }
 

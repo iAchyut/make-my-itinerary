@@ -1,4 +1,5 @@
 import axios from "axios";
+import useAPI from "./useAPI";
 
 export const GetPlaceAutofill = async (text) => {
   try {
@@ -14,3 +15,4 @@ export const GetPlaceAutofill = async (text) => {
     throw new Error("Failed to fetch place autofill data");
   }
 };
+
