@@ -1,73 +1,69 @@
-import * as React from "react";
-import TextField from "@mui/material/TextField";
-import Autocomplete from "@mui/material/Autocomplete";
-import CircularProgress from "@mui/material/CircularProgress";
-import { useDeferredValue } from "react";
+import React, { useState } from "react";
+import { AutoComplete, Spin } from "antd";
+import { GetPlaceAutofill } from "../../apiCalls/api";
 
-export default function Asynchronous({ label, handleAutocomplete, value, setValue }) {
-  const [open, setOpen] = React.useState(false);
-  const [options, setOptions] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  let deferredVal = useDeferredValue(value);
+function AsyncAutoComplete() {
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const getData = (value) => {
-    if (value) {
-      setOpen(true);
-      (async () => {
-        setLoading(true);
-        let data = await handleAutocomplete(value); // For demo purposes.
-        setLoading(false);
-        console.log("data", data);
-        setOptions([...data.data]);
-      })();
+  const handleSearch = async (value) => {
+    if (!value) {
+      setOptions([]);
+      return;
     }
+    setLoading(true);
+    // Simulate async fetch (replace with actual API call)
+    // const { data } = await GetPlaceAutofill(value);
+    //console.log("Fetched data:", data);]
+    
+    const data = await fetchSuggestions(value);
+    
+    setOptions(data.map((item) => ({ value: item.name })));
+    setLoading(false);
   };
 
-  React.useEffect(() => {
-    if(deferredVal) getData(deferredVal);
-  }, [deferredVal]);
-
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
+  const fetchSuggestions = async (query) => {
+    // Simulated network delay
+    await new Promise((r) => setTimeout(r, 500));
+    return [
+      {
+        id: "place.25495659",
+        name: "Lucknow, Uttar Pradesh, India",
+        coordinates: [80.92392, 26.84312],
+      },
+      {
+        id: "place.194349292",
+        name: "Luck, Wisconsin, United States",
+        coordinates: [-92.482422, 45.575746],
+      },
+      {
+        id: "place.108070951",
+        name: "Lucknow, Ontario, Canada",
+        coordinates: [-81.51684, 43.9616],
+      },
+      {
+        id: "place.194357484",
+        name: "Luckey, Ohio, United States",
+        coordinates: [-83.486052, 41.451458],
+      },
+      {
+        id: "place.47761466",
+        name: "Luckau, Kreis Dahme-Spreewald, Brandenburg, Germany",
+        coordinates: [13.714768, 51.85282],
+      },
+    ];
   };
 
   return (
-    <Autocomplete
-      sx={{ width: 300 }}
-      open={open}
-      onOpen={handleOpen}
-      onClose={handleClose}
-      isOptionEqualToValue={(option, value) => option.name === value}
-      getOptionLabel={(option) => option.name}
+    <AutoComplete
+      style={{ width: "100%" }}
+      onSearch={handleSearch}
+      notFoundContent={loading ? <Spin size="small" /> : "No Results"}
       options={options}
-      loading={loading}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label={label}
-          value={value}
-          onChange={(event) => {
-            setValue(event.target.value);
-          }}
-          slotProps={{
-            input: {
-              ...params.InputProps,
-              endAdornment: (
-                <React.Fragment>
-                  {loading ? (
-                    <CircularProgress color="inherit" size={20} />
-                  ) : null}
-                  {params.InputProps.endAdornment}
-                </React.Fragment>
-              ),
-            },
-          }}
-        />
-      )}
+      placeholder="Where to?"
+      size="large"
     />
   );
 }
+
+export default AsyncAutoComplete;

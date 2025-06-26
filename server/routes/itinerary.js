@@ -3,6 +3,7 @@ import express from "express";
 import { OpenAI } from "openai";
 import axios from "axios";
 import { AutofillData } from "./data.js";
+import User from "../models/user.js";
 
 console.log("🔍 API KEY inside route:", OPENAI_API_KEY);
 
@@ -103,6 +104,31 @@ router.get("/placeAutofill", async (req, res) => {
   } catch (error) {
     console.error("Error in /placeAutofill route:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Save user endpoint
+router.post('/save-user', async (req, res) => {
+  const { uid, name, email, photo } = req.body;
+
+  if (!uid || !email) {
+    return res.status(400).json({ error: 'uid and email required' });
+  }
+
+  try {
+    let user = await User.findOne({ uid });
+
+    if (!user) {
+      user = await User.create({ uid, name, email, photo });
+      console.log('✅ New user saved:', email);
+    } else {
+      console.log('ℹ️ User already exists:', email);
+    }
+
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('❌ Error saving user:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
