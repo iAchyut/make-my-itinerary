@@ -20,6 +20,7 @@ const useAPI = (url) => {
         }
       } catch (err) {
         setError(err);
+        throw new Error(`API call failed: ${err.message}`);
       } finally {
         setLoading(false);
       }

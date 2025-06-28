@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { Layout, Menu, Button, AutoComplete, DatePicker, Row, Col } from "antd";
-import { UserOutlined } from "@ant-design/icons";
+import { SyncOutlined } from "@ant-design/icons";
 import "./App.css";
 import AutoCompleteComponent from "./components/AutoComplete";
 import { GetPlaceAutofill } from "./apiCalls/api";
 import LoginModal from "./firebase/LoginModal.jsx";
 import { useAuth, handleLogout } from "./Auth/AuthContext.jsx"; // Adjust the import path as necessary
 import image from "./assets/unsplash.jpg"; // Placeholder image path
+import { Formik } from "formik";
+import useAPI from "./apiCalls/useAPI";
+import ItineraryModal from "./components/ItineraryModal";
 
 const { Header, Content, Footer } = Layout;
 const { RangePicker } = DatePicker;
@@ -14,7 +17,12 @@ const { RangePicker } = DatePicker;
 const App = () => {
   const [loginOpen, setLoginOpen] = useState(false);
   const user = useAuth();
-  console.log("User from AuthContext:", user);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  let { data, loadingData, error, fetchData } = useAPI(
+    `http://localhost:5000/api/itinerary/search`
+  );
+  console.log("Fetched itinerary data:", data, loadingData, error);
+
   const placeSelectedHandler = (value) => {
     console.log("Selected Place:", value, user);
   };
@@ -27,7 +35,8 @@ const App = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          background: "linear-gradient(90deg,rgba(255, 179, 179, 1) 0%, rgba(181, 181, 255, 1) 0%, rgba(0, 212, 255, 1) 100%)",
+          background:
+            "linear-gradient(90deg,rgba(255, 179, 179, 1) 0%, rgba(181, 181, 255, 1) 0%, rgba(0, 212, 255, 1) 100%)",
           padding: "0 30px",
         }}
       >
@@ -62,7 +71,7 @@ const App = () => {
       </Header>
 
       {/* Hero Section */}
-      <Content style={{ padding: "60px 100px", backgroundColor:"#fff" }}>
+      <Content style={{ padding: "60px 100px", backgroundColor: "#fff" }}>
         <Row gutter={48} align="middle">
           <Col span={12}>
             <h1
@@ -75,23 +84,102 @@ const App = () => {
             >
               Enter your destination and dates
             </h1>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 20,
-                alignItems: "center",
+            <Formik
+              initialValues={{ place: "", dateRange: [] }}
+              validate={(values) => {
+                const errors = {};
+                if (!values.place) {
+                  errors.place = "Destination is required";
+                }
+                if (!values.dateRange) {
+                  errors.dateRange = "Start date is required";
+                }
+
+                return errors;
+              }}
+              onSubmit={(values, { setSubmitting }) => {
+                try {
+                  setSubmitting(true);
+                  console.log("Form values:", values);
+                  fetchData(
+                    {
+                      method: "POST",
+                      data: {
+                        place: values.place,
+                        dateRange: values.dateRange,
+                      },
+                    },
+                    (response) => {
+                      console.log("Response data:", response);
+                      setIsModalOpen(true);
+                      setSubmitting(false);
+                    }
+                  );
+                } catch (error) {
+                  console.error("Error in form submission:", error);
+                  setSubmitting(false);
+                  return;
+                }
+                
               }}
             >
-              <AutoCompleteComponent
-                handleSearch={GetPlaceAutofill}
-                onSelect={placeSelectedHandler}
-              />
-              <RangePicker style={{ height: 50, width: "100%" }} size="large" />
-              <Button type="primary" style={{ width: "40%" }}>
-                Get My Iternerary
-              </Button>
-            </div>
+              {({
+                values,
+                errors,
+                touched,
+                handleBlur,
+                handleSubmit,
+                isSubmitting,
+                setFieldValue,
+                /* and other goodies */
+              }) => {
+                console.log("Formik values:", values);
+                return (
+                  <form onSubmit={handleSubmit}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 20,
+                        alignItems: "center",
+                      }}
+                    >
+                      <AutoCompleteComponent
+                        value={values.place}
+                        onChange={(value) => setFieldValue("place", value)}
+                        onBlur={handleBlur}
+                        handleSelect={(value) => setFieldValue("place", value)}
+                        error={
+                          errors.place && touched.place ? errors.place : ""
+                        }
+                        placeholder="Where to?"
+                        size="large"
+                        handleSearch={GetPlaceAutofill}
+                        onSelect={placeSelectedHandler}
+                      />
+                      <RangePicker
+                        value={values.dateRange}
+                        onChange={(value) => {
+                          setFieldValue("dateRange", value);
+                        }}
+                        style={{ height: 50, width: "100%" }}
+                        size="large"
+                      />
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={
+                          isSubmitting && { icon: <SyncOutlined spin /> }
+                        }
+                        style={{ width: "40%" }}
+                      >
+                        Get My Iternerary
+                      </Button>
+                    </div>
+                  </form>
+                );
+              }}
+            </Formik>
           </Col>
           <Col span={12} style={{ textAlign: "center" }}>
             {/* Travel-themed image suggestion placeholder */}
@@ -108,6 +196,11 @@ const App = () => {
           </Col>
         </Row>
       </Content>
+      <ItineraryModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        data={data ? JSON.parse(data.response) : null}
+      />
 
       {/* Footer */}
       <Footer

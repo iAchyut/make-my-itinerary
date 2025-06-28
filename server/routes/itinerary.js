@@ -15,16 +15,30 @@ const router = express.Router();
 
 router.post("/search", async (req, res) => {
   try {
-    const { from, to, place } = req.body;
+    const { place, dateRange } = req.body;
+
+    console.log("🔍 itinerary search request from body:", place, dateRange, typeof dateRange);
+
+    let fromDate = (dateRange[0]).toString() || new Date();
+    let toDate = (dateRange[1]).toString() || new Date();
+
+    console.log("🔍 itinerary search request:", place, fromDate, toDate);
+
+    if (!place || !fromDate || !toDate) {
+      return res
+        .status(400)
+        .json({ error: "Valid place and date range are required" });
+    }
+
     let prompt = `Generate a travel itinerary JSON for:
-Place: ${place}, From: ${from}, To: ${to}.
+Place: ${place}, From: ${fromDate}, To: ${toDate}.
 Output strictly in this format:
 {
   "place": "${place}",
-  "from": "${from}",
-  "to": "${to}",
+  "from": "${fromDate}",
+  "to": "${toDate}",
   "nearByplaceToVisit": [poplar places to visit near ${place}],
-  "documentsReq": [ documents required to visit ${place}],
+  "documentsReq": [ local, internaltional documents required to visit ${place}],
   "bestTimeToVisit": [best time to visit ${place}],
   "bestRouteFromYourLocation": ["Delhi", "Stop1", "Stop2",..... "${place}"]
   "shoppingPlaces": ["popular shopping places in ${place}"],
@@ -108,11 +122,11 @@ router.get("/placeAutofill", async (req, res) => {
 });
 
 // Save user endpoint
-router.post('/save-user', async (req, res) => {
+router.post("/save-user", async (req, res) => {
   const { uid, name, email, photo } = req.body;
 
   if (!uid || !email) {
-    return res.status(400).json({ error: 'uid and email required' });
+    return res.status(400).json({ error: "uid and email required" });
   }
 
   try {
@@ -120,15 +134,15 @@ router.post('/save-user', async (req, res) => {
 
     if (!user) {
       user = await User.create({ uid, name, email, photo });
-      console.log('✅ New user saved:', email);
+      console.log("✅ New user saved:", email);
     } else {
-      console.log('ℹ️ User already exists:', email);
+      console.log("ℹ️ User already exists:", email);
     }
 
     res.json({ success: true, user });
   } catch (err) {
-    console.error('❌ Error saving user:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("❌ Error saving user:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

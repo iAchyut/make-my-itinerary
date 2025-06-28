@@ -6,7 +6,7 @@ const { Title } = Typography;
 const ItineraryModal = ({ open, onClose, data }) => {
   if (!data) return null;
   console.log("Itinerary Data:", data);
-  const renderList = (title, items=[]) => (
+  const renderList = (title, items = []) => (
     <>
       <Divider orientation="left">{title}</Divider>
       <List
@@ -23,13 +23,26 @@ const ItineraryModal = ({ open, onClose, data }) => {
       open={open}
       onCancel={onClose}
       footer={null}
-      width={900}
+      width={"90%"}
+      height={"90%"}
       centered
       title={<Title level={3}>{data.place}</Title>}
     >
       <Descriptions bordered column={2} size="middle">
-        <Descriptions.Item label="From">{data.from}</Descriptions.Item>
-        <Descriptions.Item label="To">{data.to}</Descriptions.Item>
+        <Descriptions.Item label="From">
+          {new Date(data.from).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </Descriptions.Item>
+        <Descriptions.Item label="To">
+          {new Date(data.to).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}{" "}
+        </Descriptions.Item>
         <Descriptions.Item label="Best Time to Visit">
           {data.bestTimeToVisit?.join(", ")}
         </Descriptions.Item>
