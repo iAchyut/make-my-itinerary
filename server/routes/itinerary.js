@@ -2,8 +2,9 @@ import { OPENAI_API_KEY, MAPBOX_TOKEN } from "../config.js";
 import express from "express";
 import { OpenAI } from "openai";
 import axios from "axios";
-import { AutofillData } from "./data.js";
+import authenticate from "./middleware/auth.js";
 import User from "../models/user.js";
+import UserItinerary from "../models/user-itinerary.js";
 
 console.log("🔍 API KEY inside route:", OPENAI_API_KEY);
 
@@ -17,10 +18,15 @@ router.post("/search", async (req, res) => {
   try {
     const { place, dateRange } = req.body;
 
-    console.log("🔍 itinerary search request from body:", place, dateRange, typeof dateRange);
+    console.log(
+      "🔍 itinerary search request from body:",
+      place,
+      dateRange,
+      typeof dateRange
+    );
 
-    let fromDate = (dateRange[0]).toString() || new Date();
-    let toDate = (dateRange[1]).toString() || new Date();
+    let fromDate = dateRange[0].toString() || new Date();
+    let toDate = dateRange[1].toString() || new Date();
 
     console.log("🔍 itinerary search request:", place, fromDate, toDate);
 
@@ -143,6 +149,35 @@ router.post("/save-user", async (req, res) => {
   } catch (err) {
     console.error("❌ Error saving user:", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/save-user-itinerary", authenticate, async (req, res) => {
+  const { itineraryData } = req.body;
+  const userId = req.user.uid; // Comes from Firebase token via middleware
+
+  if (!itineraryData) {
+    return res.status(400).json({ error: "Itinerary data is required" });
+  }
+
+  try {
+    // Check if this exact itinerary already exists for the user
+    const exists = await UserItinerary.findOne({
+      userId,
+      itineraryData: itineraryData, // Deep match — make sure object structure is stable
+    });
+
+    if (!exists) {
+      const newItinerary = await UserItinerary.create({ userId, itineraryData });
+      console.log("✅ New itinerary saved for:", userId);
+      return res.json({ success: true, itinerary: newItinerary });
+    } else {
+      console.log("ℹ️ Itinerary already exists for:", userId);
+      return res.json({ success: true, message: "Itinerary already exists" });
+    }
+  } catch (err) {
+    console.error("❌ Error saving itinerary:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 

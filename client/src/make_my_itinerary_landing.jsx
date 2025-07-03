@@ -120,7 +120,7 @@ const App = () => {
                   setSubmitting(false);
                   return;
                 }
-                
+
               }}
             >
               {({
@@ -156,9 +156,11 @@ const App = () => {
                         size="large"
                         handleSearch={GetPlaceAutofill}
                         onSelect={placeSelectedHandler}
+                        disabled={isSubmitting}
                       />
                       <RangePicker
                         value={values.dateRange}
+                        disabled={isSubmitting}
                         onChange={(value) => {
                           setFieldValue("dateRange", value);
                         }}
@@ -199,7 +201,7 @@ const App = () => {
       <ItineraryModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        data={data ? JSON.parse(data.response) : null}
+        itineraryData={data ? JSON.parse(data.response) : null}
       />
 
       {/* Footer */}

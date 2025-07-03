@@ -4,7 +4,7 @@ import useAPI from "../../apiCalls/useAPI";
 import ItineraryModal from "../ItineraryModal";
 import {GetPlaceAutofill} from "../../apiCalls/api.js";
 
-function AsyncAutoComplete({value, onChange, handleSelect}) {
+function AsyncAutoComplete({value, onChange, handleSelect, disabled}) {
 
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,7 @@ function AsyncAutoComplete({value, onChange, handleSelect}) {
     <>
       <AutoComplete
         style={{ width: "100%" }}
-        value={value}
+        value={deferredValue}
         onChange={(text) => onChange(text)}
         onSearch={() => handleSearch(deferredValue)}
         notFoundContent={loading ? <Spin size="small" /> : "No Results"}
@@ -41,6 +41,7 @@ function AsyncAutoComplete({value, onChange, handleSelect}) {
         options={options}
         placeholder="Where to?"
         size="large"
+        disabled={disabled}
       />
   
     </>

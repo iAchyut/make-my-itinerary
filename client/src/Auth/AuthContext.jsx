@@ -13,36 +13,36 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log("🔄 called unsubscribe", user);
       if (user) {
-       // const alreadySaved = localStorage.getItem("userSavedToDB");
-          setUser(user);
-          const userData = {
-            uid: user.uid,
-            name: user.displayName,
-            email: user.email,
-            photo: user.photoURL,
-          };
+        // const alreadySaved = localStorage.getItem("userSavedToDB");
+        setUser(user);
+        const userData = {
+          uid: user.uid,
+          name: user.displayName,
+          email: user.email,
+          photo: user.photoURL,
+        };
 
-          try {
-            console.log("🔄 called save-user", user);
-            const res = await fetch(
-              "http://localhost:5000/api/itinerary/save-user",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(userData),
-              }
-            );
-
-            const data = await res.json();
-            if (data.success) {
-              console.log("✅ User saved");
-              localStorage.setItem("userSavedToDB", "true"); // 🟢 Save flag
-            } else {
-              console.error("❌ Backend error:", data.error);
+        try {
+          console.log("🔄 called save-user", user);
+          const res = await fetch(
+            "http://localhost:5000/api/itinerary/save-user",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(userData),
             }
-          } catch (err) {
-            console.error("❌ Network error:", err);
+          );
+
+          const data = await res.json();
+          if (data.success) {
+            console.log("✅ User saved");
+            localStorage.setItem("userSavedToDB", "true"); // 🟢 Save flag
+          } else {
+            console.error("❌ Backend error:", data.error);
           }
+        } catch (err) {
+          console.error("❌ Network error:", err);
+        }
       } else {
         // Clear flag on logout
         setUser(null);
@@ -66,4 +66,14 @@ export function useAuth() {
 export const handleLogout = async () => {
   await auth.signOut();
   localStorage.removeItem("userSavedToDB"); // 🔁 Allow re-saving next time
+};
+
+export const getIDToken = async () => {
+  try {
+    const token = await auth.currentUser.getIdToken(true); // Force refresh
+    return token;
+  } catch (error) {
+    console.error("Error getting ID token:", error);
+    throw error;
+  }
 };

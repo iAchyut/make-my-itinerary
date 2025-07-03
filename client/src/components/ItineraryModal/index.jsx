@@ -1,11 +1,43 @@
 import React from "react";
 import { Modal, Descriptions, List, Typography, Divider, Row, Col } from "antd";
+import { SaveOutlined } from "@ant-design/icons";
+import useAPI from "../../apiCalls/useAPI"; // Adjust the import path as necessary
+import {useAuth} from "../../Auth/AuthContext"; // Adjust the import path as necessary
 
 const { Title } = Typography;
+  
 
-const ItineraryModal = ({ open, onClose, data }) => {
-  if (!data) return null;
-  console.log("Itinerary Data:", data);
+const ItineraryModal = ({ open, onClose, itineraryData }) => {
+  const context = useAuth();
+  let { data, loadingData, error, fetchData } = useAPI(
+    `http://localhost:5000/api/itinerary/save-user-itinerary`
+  );
+
+  const saveItinerary = (itineraryData) => {
+    // Function to save the itinerary
+
+    try {
+      fetchData(
+        {
+          method: "POST",
+          data: {
+            itineraryData: itineraryData
+          },
+        },
+        (response) => {
+          console.log("Saved itineraryData:", response);
+        }
+      );
+    } catch (error) {
+      console.error("Error saving itinerary:", error);
+      return;
+    }
+  };
+
+  console.log("Itinerary Modal itineraryData:", itineraryData, open, onClose);
+
+  if (!itineraryData) return null;
+  console.log("Itinerary itineraryData:", itineraryData);
   const renderList = (title, items = []) => (
     <>
       <Divider orientation="left">{title}</Divider>
@@ -26,73 +58,88 @@ const ItineraryModal = ({ open, onClose, data }) => {
       width={"90%"}
       height={"90%"}
       centered
-      title={<Title level={3}>{data.place}</Title>}
+      title={
+        <Title level={3}>
+          <>
+            {itineraryData.place}
+            {"        "}
+            <SaveOutlined
+              size="large"
+              onClick={() => saveItinerary(itineraryData)}
+            />
+          </>
+        </Title>
+      }
     >
+      {}
       <Descriptions bordered column={2} size="middle">
         <Descriptions.Item label="From">
-          {new Date(data.from).toLocaleDateString("en-US", {
+          {new Date(itineraryData.from).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
             day: "numeric",
           })}
         </Descriptions.Item>
         <Descriptions.Item label="To">
-          {new Date(data.to).toLocaleDateString("en-US", {
+          {new Date(itineraryData.to).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
             day: "numeric",
           })}{" "}
         </Descriptions.Item>
         <Descriptions.Item label="Best Time to Visit">
-          {data.bestTimeToVisit?.join(", ")}
+          {itineraryData.bestTimeToVisit?.join(", ")}
         </Descriptions.Item>
         <Descriptions.Item label="Local Currency">
-          {data.localCurrency?.join(", ")}
+          {itineraryData.localCurrency?.join(", ")}
         </Descriptions.Item>
         <Descriptions.Item label="Weather">
-          {data.localWeather?.join(", ")}
+          {itineraryData.localWeather?.join(", ")}
         </Descriptions.Item>
         <Descriptions.Item label="Local Languages">
-          {data.localLanguage?.join(", ")}
+          {itineraryData.localLanguage?.join(", ")}
         </Descriptions.Item>
         <Descriptions.Item label="Culture">
-          {data.localCulture?.join(", ")}
+          {itineraryData.localCulture?.join(", ")}
         </Descriptions.Item>
         <Descriptions.Item label="Customs">
-          {data.localCustoms?.join(", ")}
+          {itineraryData.localCustoms?.join(", ")}
         </Descriptions.Item>
       </Descriptions>
 
       <Row gutter={24} style={{ marginTop: 24 }}>
         <Col span={12}>
-          {renderList("Nearby Places to Visit", data.nearByplaceToVisit)}
-          {renderList("Shopping Places", data.shoppingPlaces)}
-          {renderList("Local Food", data.localFood)}
-          {renderList("Local Transport", data.localTransport)}
+          {renderList(
+            "Nearby Places to Visit",
+            itineraryData.nearByplaceToVisit
+          )}
+          {renderList("Shopping Places", itineraryData.shoppingPlaces)}
+          {renderList("Local Food", itineraryData.localFood)}
+          {renderList("Local Transport", itineraryData.localTransport)}
           {renderList(
             "Best Route From Your Location",
-            data.bestRouteFromYourLocation
+            itineraryData.bestRouteFromYourLocation
           )}
         </Col>
         <Col span={12}>
-          {renderList("Local Attractions", data.localAttractions)}
-          {renderList("Local Events", data.localEvents)}
-          {renderList("Local Art", data.localArt)}
-          {renderList("Local Music", data.localMusic)}
-          {renderList("Accommodation", data.localAccommodation)}
+          {renderList("Local Attractions", itineraryData.localAttractions)}
+          {renderList("Local Events", itineraryData.localEvents)}
+          {renderList("Local Art", itineraryData.localArt)}
+          {renderList("Local Music", itineraryData.localMusic)}
+          {renderList("Accommodation", itineraryData.localAccommodation)}
         </Col>
       </Row>
 
       <Row gutter={24} style={{ marginTop: 24 }}>
         <Col span={12}>
-          {renderList("Documents Required", data.documentsReq)}
-          {renderList("Health Tips", data.localHealthTips)}
-          {renderList("Emergency Numbers", data.localEmergencyNumbers)}
+          {renderList("Documents Required", itineraryData.documentsReq)}
+          {renderList("Health Tips", itineraryData.localHealthTips)}
+          {renderList("Emergency Numbers", itineraryData.localEmergencyNumbers)}
         </Col>
         <Col span={12}>
-          {renderList("Safety Tips", data.localSafety)}
-          {renderList("Local History", data.localHistory)}
-          {renderList("Shopping Items", data.localShopping)}
+          {renderList("Safety Tips", itineraryData.localSafety)}
+          {renderList("Local History", itineraryData.localHistory)}
+          {renderList("Shopping Items", itineraryData.localShopping)}
         </Col>
       </Row>
     </Modal>
