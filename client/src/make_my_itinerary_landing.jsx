@@ -10,6 +10,7 @@ import image from "./assets/unsplash.jpg"; // Placeholder image path
 import { Formik } from "formik";
 import useAPI from "./apiCalls/useAPI";
 import ItineraryModal from "./components/ItineraryModal";
+import SavedItinerariesModal from "./components/SavedItinerary/index.jsx"; // Adjust the import path as necessary
 
 const { Header, Content, Footer } = Layout;
 const { RangePicker } = DatePicker;
@@ -18,14 +19,46 @@ const App = () => {
   const [loginOpen, setLoginOpen] = useState(false);
   const user = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [selectedItinerary, setSelectedItinerary] = useState(null);
+
   let { data, loadingData, error, fetchData } = useAPI(
     `http://localhost:5000/api/itinerary/search`
   );
   console.log("Fetched itinerary data:", data, loadingData, error);
 
+  let {
+    data: savedItineraryData,
+    fetchData: fetchSavedItineraries,
+  } = useAPI(`http://localhost:5000/api/itinerary/get-user-itineraries`);
+
   const placeSelectedHandler = (value) => {
     console.log("Selected Place:", value, user);
   };
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const fetchItineraries = async () => {
+    try {
+      
+      fetchSavedItineraries(
+        {
+          method: "GET",
+        },
+        (response) => {
+          console.log("Response data:", response);
+          setModalVisible(true);
+        }
+      );
+    } catch (error) {
+      console.error("Error in form submission:", error);
+      return;
+    }
+  };
+
+    const handleRowClick = (record) => {
+    setSelectedItinerary(record.itineraryData);
+    setIsModalOpen(true);
+  };
+
 
   return (
     <Layout>
@@ -40,17 +73,26 @@ const App = () => {
           padding: "0 30px",
         }}
       >
-        <div style={{ fontWeight: "bold", fontSize: "24px", color: "#000" }}>
+        <div style={{ fontWeight: "400", fontSize: "24px", color: "#000" }}>
           MakeMyItinerary
         </div>
+
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Menu
-            mode="horizontal"
-            style={{ borderBottom: "none", background: "transparent" }}
-          >
-            <Menu.Item key="destinations">Destinations</Menu.Item>
-            <Menu.Item key="booking">Booking</Menu.Item>
-          </Menu>
+          {user && user.user ? (
+            <>
+              <Menu
+                mode="horizontal"
+                style={{ borderBottom: "none", background: "transparent" }}
+              >
+                <Menu.Item key="destinations" onClick={fetchItineraries}>
+                  Saved Itinerary
+                </Menu.Item>
+              </Menu>
+            </>
+          ) : (
+            <></>
+          )}
+
           {user && user.user ? (
             <>
               <p>Hello, {user.user.displayName}</p>
@@ -111,6 +153,7 @@ const App = () => {
                     },
                     (response) => {
                       console.log("Response data:", response);
+                      setSelectedItinerary(JSON.parse(response.response));
                       setIsModalOpen(true);
                       setSubmitting(false);
                     }
@@ -120,7 +163,6 @@ const App = () => {
                   setSubmitting(false);
                   return;
                 }
-
               }}
             >
               {({
@@ -201,7 +243,13 @@ const App = () => {
       <ItineraryModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        itineraryData={data ? JSON.parse(data.response) : null}
+        itineraryData={selectedItinerary ? (selectedItinerary) : null}
+      />
+      <SavedItinerariesModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        itineraries={savedItineraryData?savedItineraryData: []}
+        onSelectItinerary={handleRowClick}
       />
 
       {/* Footer */}

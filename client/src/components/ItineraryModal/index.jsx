@@ -57,6 +57,7 @@ const ItineraryModal = ({ open, onClose, itineraryData }) => {
       footer={null}
       width={"90%"}
       height={"90%"}
+      zIndex={1100} // Ensure modal is on top
       centered
       title={
         <Title level={3}>

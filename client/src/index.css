@@ -1,5 +1,5 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Bitter", serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light dark;
@@ -10,6 +10,18 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.clickable-row:hover {
+  background-color: #f0f2f5;
+}
+
+* {
+    font-family: "Bitter", serif;
 }
 
 a {
@@ -27,6 +39,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  font-family: "Bitter", serif;
 }
 
 h1 {

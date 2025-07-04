@@ -70,7 +70,8 @@ export const handleLogout = async () => {
 
 export const getIDToken = async () => {
   try {
-    const token = await auth.currentUser.getIdToken(true); // Force refresh
+    let token = null;
+    if (auth.currentUser) token = await auth.currentUser.getIdToken(true); // Force refresh
     return token;
   } catch (error) {
     console.error("Error getting ID token:", error);

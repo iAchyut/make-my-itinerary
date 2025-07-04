@@ -5,7 +5,7 @@ import axios from "axios";
 import authenticate from "./middleware/auth.js";
 import User from "../models/user.js";
 import UserItinerary from "../models/user-itinerary.js";
-
+import { v4 as uuidv4 } from "uuid";
 console.log("🔍 API KEY inside route:", OPENAI_API_KEY);
 
 const openai = new OpenAI({
@@ -155,6 +155,7 @@ router.post("/save-user", async (req, res) => {
 router.post("/save-user-itinerary", authenticate, async (req, res) => {
   const { itineraryData } = req.body;
   const userId = req.user.uid; // Comes from Firebase token via middleware
+  console.log("🔍 Saving itinerary for user:", userId);
 
   if (!itineraryData) {
     return res.status(400).json({ error: "Itinerary data is required" });
@@ -164,11 +165,23 @@ router.post("/save-user-itinerary", authenticate, async (req, res) => {
     // Check if this exact itinerary already exists for the user
     const exists = await UserItinerary.findOne({
       userId,
-      itineraryData: itineraryData, // Deep match — make sure object structure is stable
+      "itineraryData.place": itineraryData.place,
+      "itineraryData.from": itineraryData.from,
+      "itineraryData.to": itineraryData.to,
     });
-
+    console.log(
+      "🔍 Checking if itinerary exists for user:",
+      userId,
+      "Exists:",
+      exists
+    );
     if (!exists) {
-      const newItinerary = await UserItinerary.create({ userId, itineraryData });
+      const itineraryId = uuidv4(); // generate unique ID
+      const newItinerary = await UserItinerary.create({
+        itineraryId,
+        userId,
+        itineraryData,
+      });
       console.log("✅ New itinerary saved for:", userId);
       return res.json({ success: true, itinerary: newItinerary });
     } else {
@@ -181,4 +194,23 @@ router.post("/save-user-itinerary", authenticate, async (req, res) => {
   }
 });
 
+router.get("/get-user-itineraries", authenticate, async (req, res) => {
+  const userId = req.user.uid;
+  console.log("🔍 Fetching itineraries for user:", userId);
+  try {
+    const itineraries = await UserItinerary.find({ userId }).sort({
+      createdAt: -1,
+    });
+    console.log("🔍 Found itineraries:", itineraries.length);
+    if (itineraries.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No itineraries found for this user" });
+    }
+    return res.json({ itineraries });
+  } catch (err) {
+    console.error("❌ Error fetching itineraries:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
 export default router;
