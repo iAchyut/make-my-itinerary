@@ -3,7 +3,7 @@ import useAPI from "./useAPI";
 
 export const GetPlaceAutofill = async (text) => {
   try {
-    let data = await axios.get(`http://localhost:5000/api/itinerary/placeAutofill?text=${text}`);
+    let data = await axios.get(`${import.meta.env.VITE_API_ENDPOINT}api/itinerary/placeAutofill?text=${text}`);
 
     if (data.status === 200) {
       return data;

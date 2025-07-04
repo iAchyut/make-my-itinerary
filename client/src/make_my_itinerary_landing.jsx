@@ -22,14 +22,14 @@ const App = () => {
    const [selectedItinerary, setSelectedItinerary] = useState(null);
 
   let { data, loadingData, error, fetchData } = useAPI(
-    `http://localhost:5000/api/itinerary/search`
+    `${import.meta.env.VITE_API_ENDPOINT}api/itinerary/search`
   );
   console.log("Fetched itinerary data:", data, loadingData, error);
 
   let {
     data: savedItineraryData,
     fetchData: fetchSavedItineraries,
-  } = useAPI(`http://localhost:5000/api/itinerary/get-user-itineraries`);
+  } = useAPI(`${import.meta.env.VITE_API_ENDPOINT}api/itinerary/get-user-itineraries`);
 
   const placeSelectedHandler = (value) => {
     console.log("Selected Place:", value, user);

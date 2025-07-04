@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
         try {
           console.log("🔄 called save-user", user);
           const res = await fetch(
-            "http://localhost:5000/api/itinerary/save-user",
+            `${import.meta.env.VITE_API_ENDPOINT}api/itinerary/save-user`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },

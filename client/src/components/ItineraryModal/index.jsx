@@ -10,7 +10,7 @@ const { Title } = Typography;
 const ItineraryModal = ({ open, onClose, itineraryData }) => {
   const context = useAuth();
   let { data, loadingData, error, fetchData } = useAPI(
-    `http://localhost:5000/api/itinerary/save-user-itinerary`
+    `${import.meta.env.VITE_API_ENDPOINT}api/itinerary/save-user-itinerary`
   );
 
   const saveItinerary = (itineraryData) => {
