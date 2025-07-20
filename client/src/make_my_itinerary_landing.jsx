@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Layout, Menu, Button, AutoComplete, DatePicker, Row, Col } from "antd";
+import React, { useState, useRef } from "react";
+import { Layout, Menu, Button, AutoComplete, DatePicker, Row, Col} from "antd";
 import { SyncOutlined } from "@ant-design/icons";
 import "./App.css";
 import AutoCompleteComponent from "./components/AutoComplete";
@@ -11,25 +11,28 @@ import { Formik } from "formik";
 import useAPI from "./apiCalls/useAPI";
 import ItineraryModal from "./components/ItineraryModal";
 import SavedItinerariesModal from "./components/SavedItinerary/index.jsx"; // Adjust the import path as necessary
+import NotificationContext from "./NotificationContext/index.jsx"; // Adjust the import path as necessary
 
 const { Header, Content, Footer } = Layout;
 const { RangePicker } = DatePicker;
 
 const App = () => {
+   const formRef = useRef();
   const [loginOpen, setLoginOpen] = useState(false);
   const user = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-   const [selectedItinerary, setSelectedItinerary] = useState(null);
+  const [selectedItinerary, setSelectedItinerary] = useState(null);
+  const { openNotificationWithIcon } = React.useContext(NotificationContext);
+  console.log("openNotificationWithIcon", openNotificationWithIcon);
 
   let { data, loadingData, error, fetchData } = useAPI(
     `${import.meta.env.VITE_API_ENDPOINT}api/itinerary/search`
   );
   console.log("Fetched itinerary data:", data, loadingData, error);
 
-  let {
-    data: savedItineraryData,
-    fetchData: fetchSavedItineraries,
-  } = useAPI(`${import.meta.env.VITE_API_ENDPOINT}api/itinerary/get-user-itineraries`);
+  let { data: savedItineraryData, fetchData: fetchSavedItineraries } = useAPI(
+    `${import.meta.env.VITE_API_ENDPOINT}api/itinerary/get-user-itineraries`
+  );
 
   const placeSelectedHandler = (value) => {
     console.log("Selected Place:", value, user);
@@ -38,7 +41,6 @@ const App = () => {
 
   const fetchItineraries = async () => {
     try {
-      
       fetchSavedItineraries(
         {
           method: "GET",
@@ -46,15 +48,17 @@ const App = () => {
         (response) => {
           console.log("Response data:", response);
           setModalVisible(true);
+           formRef.current.resetForm(); 
         }
       );
     } catch (error) {
+      openNotificationWithIcon('error', 'Error', `Error getting Inineraries: Contact support if the issue persists.`);
       console.error("Error in form submission:", error);
       return;
     }
   };
 
-    const handleRowClick = (record) => {
+  const handleRowClick = (record) => {
     setSelectedItinerary(record.itineraryData);
     setIsModalOpen(true);
   };
@@ -133,10 +137,11 @@ const App = () => {
                 if (!values.place) {
                   errors.place = "Destination is required";
                 }
-                if (!values.dateRange) {
-                  errors.dateRange = "Start date is required";
+                if (values.dateRange.length < 2 || !values.dateRange[0] || !values.dateRange[1] ) {
+                  errors.dateRange = "Dates are required";
                 }
 
+                console.log("Formik values check:", values, errors);
                 return errors;
               }}
               onSubmit={(values, { setSubmitting }) => {
@@ -169,13 +174,15 @@ const App = () => {
                 values,
                 errors,
                 touched,
-                handleBlur,
                 handleSubmit,
                 isSubmitting,
                 setFieldValue,
-                /* and other goodies */
+                setFieldTouched,
+                innerRef,
               }) => {
-                console.log("Formik values:", values);
+                formRef.current = innerRef;
+                console.log("Formik innerRef:", innerRef);
+                console.log("Formik values:", values, errors, touched);
                 return (
                   <form onSubmit={handleSubmit}>
                     <div
@@ -189,26 +196,31 @@ const App = () => {
                       <AutoCompleteComponent
                         value={values.place}
                         onChange={(value) => setFieldValue("place", value)}
-                        onBlur={handleBlur}
+                        onBlur={() => setFieldTouched("place", true)}
                         handleSelect={(value) => setFieldValue("place", value)}
-                        error={
-                          errors.place && touched.place ? errors.place : ""
-                        }
+                        error={errors.place && touched.place ? errors.place : ""}
                         placeholder="Where to?"
                         size="large"
                         handleSearch={GetPlaceAutofill}
                         onSelect={placeSelectedHandler}
                         disabled={isSubmitting}
                       />
+                      <div  style={{ width: "100%", display: "flex", flexDirection: "column", gap: 5, alignItems: "flex-start" }}>
                       <RangePicker
+                        name="dateRange"
                         value={values.dateRange}
                         disabled={isSubmitting}
+                        onBlur={() => setFieldTouched("dateRange", true)}
                         onChange={(value) => {
                           setFieldValue("dateRange", value);
                         }}
                         style={{ height: 50, width: "100%" }}
                         size="large"
+                        status={errors.dateRange  && touched.dateRange ? "error" : ""}
+                        placeholder={["Start Date", "End Date"]}
                       />
+                       {errors && touched.dateRange && errors.dateRange && (<label style={{color:"red"}}>{errors.dateRange}</label>)}
+                      </div>
                       <Button
                         type="primary"
                         htmlType="submit"
@@ -243,12 +255,12 @@ const App = () => {
       <ItineraryModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        itineraryData={selectedItinerary ? (selectedItinerary) : null}
+        itineraryData={selectedItinerary ? selectedItinerary : null}
       />
       <SavedItinerariesModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        itineraries={savedItineraryData?savedItineraryData: []}
+        itineraries={savedItineraryData ? savedItineraryData : []}
         onSelectItinerary={handleRowClick}
       />
 

@@ -1,15 +1,18 @@
-import React from "react";
-import { Modal, Descriptions, List, Typography, Divider, Row, Col } from "antd";
+import {useContext} from "react";
+import { Modal, Descriptions, List, Typography, Divider, Row, Col, Spin  } from "antd";
 import { SaveOutlined } from "@ant-design/icons";
 import useAPI from "../../apiCalls/useAPI"; // Adjust the import path as necessary
 import {useAuth} from "../../Auth/AuthContext"; // Adjust the import path as necessary
+import NotificationContext from "../../NotificationContext"; // Adjust the import path as necessary
 
 const { Title } = Typography;
   
 
 const ItineraryModal = ({ open, onClose, itineraryData }) => {
   const context = useAuth();
-  let { data, loadingData, error, fetchData } = useAPI(
+  const { openNotificationWithIcon } = useContext(NotificationContext);
+
+  let { data, loading:loadingData, error, fetchData } = useAPI(
     `${import.meta.env.VITE_API_ENDPOINT}api/itinerary/save-user-itinerary`
   );
 
@@ -25,10 +28,12 @@ const ItineraryModal = ({ open, onClose, itineraryData }) => {
           },
         },
         (response) => {
+           openNotificationWithIcon('success', 'Saved Itinerary', `See your saved itineraries in Saved Itinerary section.`);
           console.log("Saved itineraryData:", response);
         }
       );
     } catch (error) {
+      openNotificationWithIcon('error', 'Error', `Error saving Inineraries: Contact support if the issue persists.`);
       console.error("Error saving itinerary:", error);
       return;
     }
@@ -64,10 +69,15 @@ const ItineraryModal = ({ open, onClose, itineraryData }) => {
           <>
             {itineraryData.place}
             {"        "}
-            <SaveOutlined
+            {loadingData ? (
+              <Spin size="small" style={{ marginLeft: 8 }} />
+            ) : (
+              <SaveOutlined
               size="large"
               onClick={() => saveItinerary(itineraryData)}
             />
+            )}
+            
           </>
         </Title>
       }
